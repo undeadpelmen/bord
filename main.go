@@ -14,14 +14,9 @@ import (
 	"periph.io/x/host/v3"
 )
 
-func readChannel(p spi.Port, channel int) (int, error) {
+func readChannel(c spi.Conn, channel int) (int, error) {
 	tx := []byte{1, byte((8 + channel) << 4), 0}
 	rx := make([]byte, 3)
-
-	c, err := p.Connect(1*physic.MegaHertz, spi.Mode0, 8)
-	if err != nil {
-		return 0, err
-	}
 
 	if err := c.Tx(tx, rx); err != nil {
 		return 0, err
@@ -41,6 +36,11 @@ func main() {
 	}
 	defer p.Close()
 
+	conn, err := p.Connect(1*physic.MegaHertz, spi.Mode0, 8)
+	if err != nil {
+		log.Fatal("SPI Connect error")
+	}
+
 	file, err := os.OpenFile("log.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
@@ -55,7 +55,7 @@ func main() {
 		row := []string{timestamp}
 
 		for ch := 0; ch < 8; ch++ {
-			val, err := readChannel(p, ch)
+			val, err := readChannel(conn, ch)
 			if err != nil {
 				log.Printf("Error reading CH%d: %v", ch, err)
 				row = append(row, "err")
