@@ -68,6 +68,6 @@ func main() {
 		writer.Flush()
 
 		fmt.Printf("Logged at %s: %v\n", timestamp, row[1:])
-		time.Sleep(1 * time.Second)
+		time.Sleep(1 * time.Microsecond)
 	}
 }
