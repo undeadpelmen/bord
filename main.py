@@ -9,7 +9,7 @@ SERIAL_PORT = '/dev/ttyUSB0'  # стандартный порт для Arduino
 # Если не работает, попробуйте:
 # - /dev/ttyUSB0 (для Arduino с адаптером USB)
 # - /dev/ttyS0 (для UART пинов GPIO)
-BAUDRATE = 9600  # должна совпадать с baudrate на Arduino
+BAUDRATE = 115200  # должна совпадать с baudrate на Arduino
 LOG_FILE = 'serial_log.txt'
 RECONNECT_DELAY = 2  # секунды между попытками подключения
 READ_TIMEOUT = 1  # таймаут чтения порта
