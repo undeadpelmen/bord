@@ -48,7 +48,7 @@ def read_serial_data(ser):
                         line = ser.readline().decode('utf-8', errors='ignore').rstrip()
                         if line:  # если строка не пустая
                             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                            log_entry = f"[{timestamp}] {line}"
+                            log_entry = f"{line}"
                             
                             # Запись в файл
                             log_file.write(log_entry + '\n')
