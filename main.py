@@ -5,7 +5,7 @@ import sys
 from datetime import datetime
 
 # Конфигурация
-SERIAL_PORT = '/dev/ttyACM0'  # стандартный порт для Arduino
+SERIAL_PORT = '/dev/ttyUSB0'  # стандартный порт для Arduino
 # Если не работает, попробуйте:
 # - /dev/ttyUSB0 (для Arduino с адаптером USB)
 # - /dev/ttyS0 (для UART пинов GPIO)
