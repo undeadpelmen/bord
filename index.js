@@ -1,6 +1,8 @@
 import {SerialPort, ReadlineParser} from 'serialport'
 import {argv } from 'node:process'
 import pino from 'pino'
+import fs from 'fs'
+import path from 'path'
 
 const logger = pino(pino.transport({
     targets: [
@@ -31,6 +33,33 @@ const logger = pino(pino.transport({
     ],
 }));
 
+function createDataFile() {
+    const now = new Date();
+    const timestamp = now.toISOString()
+        .replace(/[:.]/g, '-')
+        .replace('T', '_')
+        .slice(0, 19);
+    const filename = `./data/serial_${timestamp}.log`;
+    
+    // Ensure data directory exists
+    if (!fs.existsSync('./data')) {
+        fs.mkdirSync('./data', { recursive: true });
+    }
+    
+    // Create file with header
+    const header = `# Serial Data Log\n# Started: ${now.toISOString()}\n# Port: /dev/ttyUSB0\n# Baud Rate: 115200\n\n`;
+    fs.writeFileSync(filename, header);
+    
+    logger.info(`Created data file: ${filename}`);
+    return filename;
+}
+
+function writeDataToFile(filename, data) {
+    const timestamp = new Date().toISOString();
+    const entry = `[${timestamp}] ${data}\n`;
+    fs.appendFileSync(filename, entry);
+}
+
 function connect() {
     const port = new SerialPort({
         path: "/dev/ttyUSB0",
@@ -55,6 +84,7 @@ async function main(args) {
     while (true) {
         try {
             const { port, parser } = connect();
+            const dataFile = createDataFile();
             
             // Open the serial port
             await new Promise((resolve, reject) => {
@@ -71,17 +101,21 @@ async function main(args) {
             
             // Handle incoming data
             parser.on('data', (data) => {
-                logger.info(`Received: ${data.trim()}`);
+                const trimmedData = data.trim();
+                logger.info(`${trimmedData}`);
+                writeDataToFile(dataFile, trimmedData);
             });
             
             // Handle port errors
             port.on('error', (err) => {
                 logger.error(`Serial port error: ${err.message}`);
+                writeDataToFile(dataFile, `ERROR: ${err.message}`);
             });
             
             // Handle port closing
             port.on('close', () => {
                 logger.warn("Serial port closed");
+                writeDataToFile(dataFile, "CONNECTION CLOSED");
             });
             
             // Keep the connection alive
