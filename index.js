@@ -84,7 +84,6 @@ async function main(args) {
     while (true) {
         try {
             const { port, parser } = connect();
-            const dataFile = createDataFile();
             
             // Open the serial port
             await new Promise((resolve, reject) => {
@@ -98,6 +97,8 @@ async function main(args) {
             });
             
             logger.info("Connected to /dev/ttyUSB0");
+
+            const dataFile = createDataFile();
             
             // Handle incoming data
             parser.on('data', (data) => {
