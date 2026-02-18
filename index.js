@@ -32,7 +32,15 @@ const logger = pino(pino.transport({
 }));
 
 function connect() {
-    return new SerialPort({path: "/dev/ttyUSB0", baudRate: 115200}).pipe(new ReadlineParser())
+    const port = new SerialPort({
+        path: "/dev/ttyUSB0",
+        baudRate: 115200,
+        autoOpen: false
+    });
+    
+    const parser = port.pipe(new ReadlineParser());
+    
+    return { port, parser };
 }
 
 function sleep(ms) {
@@ -42,17 +50,49 @@ function sleep(ms) {
 }
 
 async function main(args) {
+    logger.info("Starting serial port reader for /dev/ttyUSB0");
+    
     while (true) {
         try {
-            const parser = connect();
-
-            parser.on('data', (data) => {
-                logger.info(data);
+            const { port, parser } = connect();
+            
+            // Open the serial port
+            await new Promise((resolve, reject) => {
+                port.open((err) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve();
+                    }
+                });
             });
+            
+            logger.info("Connected to /dev/ttyUSB0");
+            
+            // Handle incoming data
+            parser.on('data', (data) => {
+                logger.info(`Received: ${data.trim()}`);
+            });
+            
+            // Handle port errors
+            port.on('error', (err) => {
+                logger.error(`Serial port error: ${err.message}`);
+            });
+            
+            // Handle port closing
+            port.on('close', () => {
+                logger.warn("Serial port closed");
+            });
+            
+            // Keep the connection alive
+            await new Promise((resolve) => {
+                port.on('close', resolve);
+            });
+            
         } catch (err) {
-            logger.error(err);
-
-            await sleep(1000)
+            logger.error(`Connection failed: ${err.message}`);
+            logger.info("Retrying in 1 second...");
+            await sleep(1000);
         }
     }
 }
